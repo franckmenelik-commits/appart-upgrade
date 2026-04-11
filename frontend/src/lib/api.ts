@@ -1,0 +1,52 @@
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(error.detail || "Erreur API");
+  }
+  return res.json();
+}
+
+export const api = {
+  // Users
+  createUser: (data: { email: string; name: string }) =>
+    request("/users/", { method: "POST", body: JSON.stringify(data) }),
+
+  // Baselines
+  getBaseline: (userId: string) => request(`/baselines/${userId}`),
+  createBaseline: (userId: string, data: Record<string, unknown>) =>
+    request(`/baselines/${userId}`, { method: "POST", body: JSON.stringify(data) }),
+  updateBaseline: (userId: string, data: Record<string, unknown>) =>
+    request(`/baselines/${userId}`, { method: "PUT", body: JSON.stringify(data) }),
+
+  // Listings
+  getListings: (params?: Record<string, string>) => {
+    const query = params ? "?" + new URLSearchParams(params).toString() : "";
+    return request(`/listings/${query}`);
+  },
+  getListing: (id: string) => request(`/listings/${id}`),
+
+  // Scores
+  scoreListing: (userId: string, listingId: string) =>
+    request(`/scores/${userId}/${listingId}`, { method: "POST" }),
+  getUserScores: (userId: string, minScore = 0) =>
+    request(`/scores/${userId}?min_score=${minScore}`),
+
+  // Billing
+  getPlans: () => request("/billing/plans"),
+  createCheckout: (userId: string, plan: string) =>
+    request(`/billing/checkout/${userId}/${plan}`, { method: "POST" }),
+  getPortalUrl: (userId: string) =>
+    request(`/billing/portal/${userId}`, { method: "POST" }),
+
+  // Scraping
+  triggerCentrisScrape: (params?: { min_price?: number; max_price?: number }) =>
+    request(`/scrape/centris${params ? "?" + new URLSearchParams(params as Record<string, string>).toString() : ""}`, { method: "POST" }),
+  triggerFullPipeline: () =>
+    request("/scrape/pipeline", { method: "POST" }),
+};

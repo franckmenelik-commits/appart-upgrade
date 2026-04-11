@@ -1,0 +1,55 @@
+/* Bouton "Score it" injecté sur chaque carte */
+.appart-upgrade-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 9999;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.appart-upgrade-btn:hover {
+  background: #1d4ed8;
+  transform: scale(1.05);
+}
+
+.appart-upgrade-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* Scores colorés */
+.appart-upgrade-btn.score-high {
+  background: #16a34a;
+  font-size: 14px;
+  padding: 8px 14px;
+}
+
+.appart-upgrade-btn.score-mid {
+  background: #ca8a04;
+  font-size: 14px;
+  padding: 8px 14px;
+}
+
+.appart-upgrade-btn.score-low {
+  background: #dc2626;
+  font-size: 14px;
+  padding: 8px 14px;
+}
+
+.appart-upgrade-btn.score-saved {
+  background: #6b7280;
+}
+
+.appart-upgrade-btn.score-error {
+  background: #991b1b;
+}
