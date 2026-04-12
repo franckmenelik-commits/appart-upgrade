@@ -1,22 +1,26 @@
 "use client";
 
-import { api } from "@/lib/api";
+import Link from "next/link";
 
 const PLANS = [
   {
     id: "free",
     name: "Gratuit",
-    price: "0$",
+    price: "0",
     period: "",
     description: "Pour tester le concept",
-    features: ["5 scores/mois", "Entree manuelle d'annonces", "Score d'upgrade de base"],
+    features: [
+      "5 scores par mois",
+      "Entree manuelle d'annonces",
+      "Score d'upgrade de base",
+    ],
     cta: "Commencer gratuitement",
     highlighted: false,
   },
   {
     id: "pro",
     name: "Pro",
-    price: "9.99$",
+    price: "9.99",
     period: "/mois",
     description: "Pour chercher serieusement",
     features: [
@@ -32,14 +36,14 @@ const PLANS = [
   {
     id: "premium",
     name: "Premium",
-    price: "19.99$",
+    price: "19.99",
     period: "/mois",
     description: "L'avantage decisif",
     features: [
-      "Tout Pro +",
+      "Tout Pro inclus",
       "Analyse d'images par IA",
       "Calcul de trajet Google Maps",
-      "Alertes push temps reel (score 80+)",
+      "Alertes push temps reel",
       "Acces API",
       "Support prioritaire",
     ],
@@ -49,73 +53,79 @@ const PLANS = [
 ];
 
 export default function PricingPage() {
-  const handleCheckout = async (planId: string) => {
-    if (planId === "free") return;
-    // TODO: Remplacer par le vrai userId depuis l'auth
-    const userId = "demo-user-id";
-    try {
-      const result = (await api.createCheckout(userId, planId)) as { checkout_url: string };
-      window.location.href = result.checkout_url;
-    } catch (err) {
-      console.error("Checkout error:", err);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 py-16">
-      <div className="max-w-5xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold">Choisis ton plan</h1>
-          <p className="text-gray-500 mt-2">
-            Commence gratuitement, upgrade quand tu es pret.
+    <div className="min-h-screen bg-[var(--background)]">
+      {/* Nav */}
+      <nav className="flex items-center justify-between max-w-6xl mx-auto px-6 py-5">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">V</div>
+          <span className="text-xl font-bold tracking-tight">Vivenza</span>
+        </Link>
+      </nav>
+
+      <div className="max-w-5xl mx-auto px-6 py-16">
+        <div className="text-center mb-14">
+          <h1 className="text-3xl md:text-4xl font-bold">Un plan simple pour chaque etape</h1>
+          <p className="text-[var(--muted)] mt-3 text-lg">
+            Commence gratuitement, upgrade quand t&apos;es pret.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-6 items-start">
           {PLANS.map((plan) => (
             <div
               key={plan.id}
-              className={`rounded-xl p-6 border-2 transition-shadow ${
-                plan.highlighted
-                  ? "border-blue-500 shadow-lg bg-white"
-                  : "border-gray-200 bg-white"
+              className={`rounded-2xl p-px ${
+                plan.highlighted ? "conic-border" : ""
               }`}
             >
-              {plan.highlighted && (
-                <div className="text-xs font-bold text-blue-600 uppercase mb-2">
-                  Populaire
+              <div className={`rounded-2xl p-6 h-full ${
+                plan.highlighted
+                  ? "bg-[var(--card)] shadow-xl"
+                  : "bg-[var(--card)] border border-[var(--card-border)]"
+              }`}>
+                {plan.highlighted && (
+                  <div className="inline-block mb-3 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 text-xs font-bold uppercase tracking-wide">
+                    Populaire
+                  </div>
+                )}
+
+                <h2 className="text-xl font-bold">{plan.name}</h2>
+                <p className="text-sm text-[var(--muted)] mt-1">{plan.description}</p>
+
+                <div className="mt-5 mb-6">
+                  <span className="text-4xl font-bold">{plan.price}$</span>
+                  <span className="text-[var(--muted)] text-sm">{plan.period}</span>
                 </div>
-              )}
-              <h2 className="text-xl font-bold">{plan.name}</h2>
-              <p className="text-gray-500 text-sm mt-1">{plan.description}</p>
 
-              <div className="mt-4 mb-6">
-                <span className="text-4xl font-bold">{plan.price}</span>
-                <span className="text-gray-400 text-sm">{plan.period}</span>
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2.5 text-sm">
+                      <svg className="w-4 h-4 text-green-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  className={`w-full py-3 rounded-xl font-medium text-sm transition-all ${
+                    plan.highlighted
+                      ? "bg-blue-600 text-white hover:bg-blue-700 btn-shine"
+                      : "bg-[var(--surface)] text-[var(--foreground)] hover:bg-gray-200 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  {plan.cta}
+                </button>
               </div>
-
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2 text-sm">
-                    <span className="text-green-500 mt-0.5">&#10003;</span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                onClick={() => handleCheckout(plan.id)}
-                className={`w-full py-3 rounded-lg font-medium transition-colors ${
-                  plan.highlighted
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                }`}
-              >
-                {plan.cta}
-              </button>
             </div>
           ))}
         </div>
+
+        <p className="text-center text-sm text-[var(--muted)] mt-10">
+          Tous les prix sont en dollars canadiens. Annulation en un clic.
+        </p>
       </div>
     </div>
   );
