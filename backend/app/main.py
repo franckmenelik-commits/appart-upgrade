@@ -5,14 +5,19 @@ from app.api.router import api_router
 from app.config import settings
 
 app = FastAPI(
-    title="AppartUpgrade API",
-    description="Moteur de recommandation d'appartements basé sur l'upgrade par rapport à ton logement actuel.",
+    title="Vivenza API",
+    description="Moteur de recommandation d'appartements — trouve ton signal dans le bruit du marché locatif.",
     version="0.1.0",
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url],
+    allow_origins=[
+        settings.frontend_url,
+        "https://vivenza.ca",
+        "https://www.vivenza.ca",
+        "http://localhost:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -13,6 +13,14 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  // Auth
+  register: (email: string, name: string, password: string) =>
+    request("/auth/register", { method: "POST", body: JSON.stringify({ email, name, password }) }),
+  login: (email: string, password: string) =>
+    request("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
+  me: (token: string) =>
+    request("/auth/me", { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }),
+
   // Users
   createUser: (data: { email: string; name: string }) =>
     request("/users/", { method: "POST", body: JSON.stringify(data) }),
@@ -31,11 +39,16 @@ export const api = {
   },
   getListing: (id: string) => request(`/listings/${id}`),
 
-  // Scores
-  scoreListing: (userId: string, listingId: string) =>
-    request(`/scores/${userId}/${listingId}`, { method: "POST" }),
-  getUserScores: (userId: string, minScore = 0) =>
-    request(`/scores/${userId}?min_score=${minScore}`),
+  // Scores (authenticated — pass token)
+  scoreListing: (token: string, listingId: string) =>
+    request(`/scores/${listingId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    }),
+  getUserScores: (token: string, minScore = 0) =>
+    request(`/scores/?min_score=${minScore}`, {
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    }),
 
   // Billing
   getPlans: () => request("/billing/plans"),
