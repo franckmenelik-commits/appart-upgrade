@@ -5,7 +5,10 @@ class Settings(BaseSettings):
     app_env: str = "development"
     database_url: str = "postgresql://postgres:postgres@localhost:5432/appart_upgrade"
     redis_url: str = "redis://localhost:6379/0"
+    # AI Provider — "gemini" (free) or "anthropic" (paid)
+    ai_provider: str = "gemini"
     anthropic_api_key: str = ""
+    gemini_api_key: str = ""
     google_maps_api_key: str = ""
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
