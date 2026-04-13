@@ -67,7 +67,7 @@ async def _extract_with_gemini(prompt: str) -> dict:
     client = genai.Client(api_key=settings.gemini_api_key)
 
     response = await client.aio.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=prompt,
         config={
             "system_instruction": EXTRACTION_SYSTEM_PROMPT,
