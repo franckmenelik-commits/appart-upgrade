@@ -6,6 +6,39 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { UpgradeScore } from "@/types";
 
+// Plans gratuit : 5 scores visibles — les autres sont floutés
+const FREE_VISIBLE_COUNT = 5;
+
+function BlurredCard({ score, onUnlock }: { score: UpgradeScore; onUnlock: () => void }) {
+  return (
+    <div className="relative rounded-xl overflow-hidden border border-[var(--card-border)]">
+      {/* Card flouttée */}
+      <div className="blur-sm pointer-events-none select-none">
+        <ScoreCard score={score} />
+      </div>
+
+      {/* Overlay de déblocage */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/70 dark:bg-black/70 backdrop-blur-[2px]">
+        <div className="text-center px-6">
+          <div className="text-3xl mb-2">🔒</div>
+          <div className="font-bold text-lg mb-1">
+            Score : <span className="text-blue-600">{score.total_score}/100</span>
+          </div>
+          <p className="text-sm text-[var(--muted)] mb-4">
+            Passe à Pro pour voir cette annonce et toutes les autres.
+          </p>
+          <button
+            onClick={onUnlock}
+            className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+          >
+            Débloquer — 9.99$/mois
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [scores, setScores] = useState<UpgradeScore[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,16 +53,13 @@ export default function DashboardPage() {
       return;
     }
 
-    // Load user profile + scores
     (async () => {
       try {
         const me = (await api.me(token)) as { name: string; plan: string; scores_used_this_month: number };
         setUser(me);
-
         const userScores = (await api.getUserScores(token, minScore)) as UpgradeScore[];
         setScores(userScores);
       } catch {
-        // Token expired or invalid
         localStorage.removeItem("vivenza_token");
         window.location.href = "/setup";
       } finally {
@@ -38,11 +68,14 @@ export default function DashboardPage() {
     })();
   }, [minScore]);
 
-  const filteredScores = source
-    ? scores.filter((s) => s.listing.source === source)
-    : scores;
+  const handleUnlock = () => {
+    window.location.href = "/pricing";
+  };
 
-  const isEmpty = !loading && filteredScores.length === 0;
+  const filteredScores = source ? scores.filter((s) => s.listing.source === source) : scores;
+  const isFree = user?.plan === "free";
+  const visibleScores = isFree ? filteredScores.slice(0, FREE_VISIBLE_COUNT) : filteredScores;
+  const lockedScores = isFree ? filteredScores.slice(FREE_VISIBLE_COUNT) : [];
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
@@ -58,13 +91,13 @@ export default function DashboardPage() {
               <span className="text-[var(--muted)]">
                 Plan: <span className="text-[var(--foreground)] font-medium capitalize">{user.plan}</span>
               </span>
-              {user.plan === "free" && (
-                <span className="text-[var(--muted)]">
-                  Scores: <span className="text-[var(--foreground)] font-medium">{user.scores_used_this_month}/5</span>
+              {isFree && filteredScores.length > FREE_VISIBLE_COUNT && (
+                <span className="text-amber-600 font-medium text-xs bg-amber-50 px-2 py-1 rounded-full">
+                  {lockedScores.length} résultats verrouillés
                 </span>
               )}
               <Link href="/pricing" className="text-blue-600 font-medium hover:underline">
-                Upgrade
+                {isFree ? "Upgrade — 9.99$/mois" : "Mon plan"}
               </Link>
             </div>
           )}
@@ -79,7 +112,10 @@ export default function DashboardPage() {
               {user ? `Salut ${user.name.split(" ")[0]}` : "Tes recommandations"}
             </h1>
             <p className="text-[var(--muted)] text-sm mt-1">
-              {filteredScores.length} annonces analysees
+              {filteredScores.length} annonces analysées
+              {isFree && lockedScores.length > 0 && (
+                <span className="text-amber-600 ml-2">· {lockedScores.length} verrouillées</span>
+              )}
             </p>
           </div>
           <div className="flex gap-2">
@@ -105,30 +141,69 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Content */}
         {loading ? (
-          <div className="text-center py-20 text-[var(--muted)]">Chargement...</div>
-        ) : isEmpty ? (
+          <div className="text-center py-20 text-[var(--muted)]">
+            <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            Chargement...
+          </div>
+        ) : filteredScores.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-5xl mb-4">🏠</div>
             <h2 className="text-xl font-semibold mb-2">Aucune recommandation encore</h2>
-            <p className="text-[var(--muted)] mb-6 max-w-md mx-auto">
-              Les annonces sont scrapees automatiquement toutes les 6 heures.
-              Tu peux aussi ajouter des annonces manuellement ou utiliser l&apos;extension Chrome sur Marketplace.
+            <p className="text-[var(--muted)] mb-6 max-w-md mx-auto text-sm">
+              Les annonces sont scrapées automatiquement toutes les 3 heures.
+              Utilise aussi l&apos;extension Chrome sur Marketplace pour ajouter des annonces manuellement.
             </p>
-            <Link
-              href="/setup"
-              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors"
-            >
-              Verifier mon baseline
+            <Link href="/setup" className="inline-block bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors">
+              Vérifier mon baseline
             </Link>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredScores.map((score) => (
-              <ScoreCard key={score.id} score={score} />
-            ))}
-          </div>
+          <>
+            {/* Scores visibles */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {visibleScores.map((score) => (
+                <ScoreCard key={score.id} score={score} />
+              ))}
+            </div>
+
+            {/* Scores verrouillés */}
+            {lockedScores.length > 0 && (
+              <>
+                <div className="my-8 flex items-center gap-4">
+                  <div className="flex-1 border-t border-[var(--card-border)]" />
+                  <div className="text-sm font-medium text-[var(--muted)] flex items-center gap-2">
+                    🔒 {lockedScores.length} annonce{lockedScores.length > 1 ? "s" : ""} verrouillée{lockedScores.length > 1 ? "s" : ""}
+                  </div>
+                  <div className="flex-1 border-t border-[var(--card-border)]" />
+                </div>
+
+                {/* Bannière upgrade */}
+                <div className="mb-6 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border border-blue-200 dark:border-blue-800 p-5 flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-blue-900 dark:text-blue-100">
+                      {lockedScores.length} résultats te sont cachés
+                    </p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                      Le meilleur upgrade pourrait être parmi eux. Passe à Pro pour tout voir.
+                    </p>
+                  </div>
+                  <Link
+                    href="/pricing"
+                    className="shrink-0 ml-4 bg-blue-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-blue-700 transition-colors"
+                  >
+                    Voir tout — 9.99$/mois
+                  </Link>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {lockedScores.map((score) => (
+                    <BlurredCard key={score.id} score={score} onUnlock={handleUnlock} />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         )}
       </div>
     </div>
