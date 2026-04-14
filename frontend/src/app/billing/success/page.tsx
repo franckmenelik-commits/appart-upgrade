@@ -23,7 +23,7 @@ function SuccessContent() {
         <p className="text-[var(--muted)] mb-8">
           {plan === "premium"
             ? "Tu as maintenant accès aux alertes temps réel, à l'analyse d'images et à l'API. Les annonces seront scorées toutes les 3 heures."
-            : "Tu as maintenant accès aux scores illimités, au scraping automatique et aux alertes email. Ton dashboard se met à jour toutes les 3 heures."}
+            : "Paiement unique confirmé — accès à vie. Toutes les annonces sont débloquées. Ton dashboard se met à jour toutes les 3 heures."}
         </p>
 
         <Link

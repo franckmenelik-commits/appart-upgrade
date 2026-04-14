@@ -57,12 +57,6 @@ export const api = {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     }),
-  getPortalUrl: (token: string) =>
-    request("/billing/portal", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    }),
-
   // Scraping
   triggerCentrisScrape: (params?: { min_price?: number; max_price?: number }) =>
     request(`/scrape/centris${params ? "?" + new URLSearchParams(params as Record<string, string>).toString() : ""}`, { method: "POST" }),

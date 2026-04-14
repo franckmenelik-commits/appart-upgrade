@@ -21,9 +21,9 @@ const PLANS = [
   {
     id: "pro",
     name: "Pro",
-    price: "9.99",
-    period: "/mois",
-    description: "Pour chercher serieusement",
+    price: "4,99",
+    period: "",
+    description: "Paiement unique · Accès à vie",
     features: [
       "Scores illimites",
       "Scraping Centris automatique",
@@ -31,7 +31,7 @@ const PLANS = [
       "Notifications email (score 70+)",
       "Historique complet",
     ],
-    cta: "Passer a Pro",
+    cta: "Débloquer les annonces",
     highlighted: true,
   },
   {
@@ -144,7 +144,7 @@ export default function PricingPage() {
         </div>
 
         <p className="text-center text-sm text-[var(--muted)] mt-10">
-          Tous les prix sont en dollars canadiens. Annulation en un clic.
+          Tous les prix sont en dollars canadiens. Accès à vie après un seul paiement.
         </p>
       </div>
     </div>

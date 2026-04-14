@@ -3,7 +3,7 @@ Intégration Stripe — Vivenza.
 
 Plans :
 - Free  : 5 scores/mois, manuel
-- Pro   : 9.99 CAD/mois — scores illimités, scraping auto, email alerts
+- Pro   : 4.99 CAD (paiement unique) — scores illimités, scraping auto, email alerts
 - Premium : 19.99 CAD/mois — tout Pro + Google Maps, push alerts, API
 """
 
@@ -24,7 +24,7 @@ PLANS = {
     },
     "pro": {
         "name": "Pro",
-        "price_monthly": 999,
+        "price_monthly": 499,
         "scores_per_month": -1,
         "features": [
             "Scores illimités",
@@ -62,7 +62,7 @@ def create_checkout_session(
     plan_data = PLANS[plan]
 
     session = stripe.checkout.Session.create(
-        mode="subscription",
+        mode="payment",
         customer_email=user_email,
         metadata={"user_id": user_id, "plan": plan},
         line_items=[
@@ -74,7 +74,6 @@ def create_checkout_session(
                         "description": " · ".join(plan_data["features"]),
                     },
                     "unit_amount": plan_data["price_monthly"],
-                    "recurring": {"interval": "month"},
                 },
                 "quantity": 1,
             }
@@ -84,14 +83,6 @@ def create_checkout_session(
     )
     return session.url
 
-
-def create_portal_session(customer_id: str, return_url: str) -> str:
-    """Portail Stripe pour gérer/annuler l'abonnement."""
-    session = stripe.billing_portal.Session.create(
-        customer=customer_id,
-        return_url=return_url,
-    )
-    return session.url
 
 
 def handle_webhook_event(payload: bytes, sig_header: str) -> dict:
@@ -109,20 +100,6 @@ def handle_webhook_event(payload: bytes, sig_header: str) -> dict:
             "user_id": session["metadata"]["user_id"],
             "plan": session["metadata"]["plan"],
             "customer_id": session["customer"],
-            "subscription_id": session["subscription"],
-        }
-
-    if event["type"] == "customer.subscription.deleted":
-        subscription = event["data"]["object"]
-        return {
-            "action": "deactivate",
-            "customer_id": subscription["customer"],
-        }
-
-    if event["type"] == "invoice.payment_failed":
-        return {
-            "action": "payment_failed",
-            "customer_id": event["data"]["object"]["customer"],
         }
 
     return {"action": "ignored", "type": event["type"]}

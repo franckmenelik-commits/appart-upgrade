@@ -31,7 +31,7 @@ function BlurredCard({ score, onUnlock }: { score: UpgradeScore; onUnlock: () =>
             onClick={onUnlock}
             className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
           >
-            Débloquer — 9.99$/mois
+            Débloquer — 4,99$ (accès à vie)
           </button>
         </div>
       </div>
@@ -96,9 +96,11 @@ export default function DashboardPage() {
                   {lockedScores.length} résultats verrouillés
                 </span>
               )}
-              <Link href="/pricing" className="text-blue-600 font-medium hover:underline">
-                {isFree ? "Upgrade — 9.99$/mois" : "Mon plan"}
-              </Link>
+              {isFree && (
+                <Link href="/pricing" className="text-blue-600 font-medium hover:underline">
+                  Débloquer — 4,99$
+                </Link>
+              )}
             </div>
           )}
         </div>
@@ -192,7 +194,7 @@ export default function DashboardPage() {
                     href="/pricing"
                     className="shrink-0 ml-4 bg-blue-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-blue-700 transition-colors"
                   >
-                    Voir tout — 9.99$/mois
+                    Débloquer tout — 4,99$ (une fois)
                   </Link>
                 </div>
 

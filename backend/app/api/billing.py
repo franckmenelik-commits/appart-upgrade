@@ -13,7 +13,6 @@ from app.services.auth import get_current_user
 from app.services.billing import (
     PLANS,
     create_checkout_session,
-    create_portal_session,
     handle_webhook_event,
 )
 
@@ -56,20 +55,6 @@ def checkout(
     return {"checkout_url": url}
 
 
-@router.post("/portal")
-def portal(
-    current_user: User = Depends(get_current_user),
-):
-    """Portail Stripe pour gérer l'abonnement."""
-    if not current_user.stripe_customer_id:
-        raise HTTPException(status_code=404, detail="Pas d'abonnement actif")
-
-    url = create_portal_session(
-        customer_id=current_user.stripe_customer_id,
-        return_url=f"{settings.frontend_url}/dashboard",
-    )
-    return {"portal_url": url}
-
 
 @router.post("/webhook")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
@@ -86,18 +71,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
         user = db.get(User, uuid.UUID(result["user_id"]))
         if user:
             user.stripe_customer_id = result["customer_id"]
-            user.stripe_subscription_id = result["subscription_id"]
             user.plan = result["plan"]
-            db.commit()
-
-    elif result["action"] in ("deactivate", "payment_failed"):
-        user = db.scalars(
-            select(User).where(User.stripe_customer_id == result["customer_id"])
-        ).first()
-        if user:
-            user.plan = "free"
-            if result["action"] == "deactivate":
-                user.stripe_subscription_id = None
             db.commit()
 
     return {"status": "ok", "action": result["action"]}
