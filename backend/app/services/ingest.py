@@ -22,6 +22,7 @@ from app.models.score import UpgradeScore
 from app.models.user import User
 from app.services.centris import CentrisListing, scrape_centris
 from app.services.email_alerts import send_score_alert
+from app.services.push_alerts import send_premium_alert
 from app.services.extractor import extract_listing_data
 from app.services.kijiji import scrape_kijiji
 from app.services.scoring import compute_upgrade_score
@@ -219,16 +220,29 @@ async def score_listings_for_user(
                 if s.total_score >= threshold
             ]
             for score_obj, listing in high_scores:
-                if listing:
-                    await send_score_alert(
-                        to_email=user.email,
-                        user_name=user.name,
+                if not listing:
+                    continue
+                # Email (Pro + Premium)
+                await send_score_alert(
+                    to_email=user.email,
+                    user_name=user.name,
+                    score=score_obj.total_score,
+                    listing_title=listing.title,
+                    listing_address=listing.address,
+                    delta_rent=score_obj.delta_rent,
+                    delta_surface=score_obj.delta_surface,
+                    delta_commute=score_obj.delta_commute_minutes,
+                    recommendation=score_obj.recommendation,
+                    listing_url=listing.source_url,
+                )
+                # Push ntfy (Premium seulement)
+                if user.plan == "premium" and user.ntfy_topic:
+                    await send_premium_alert(
+                        user_ntfy_topic=user.ntfy_topic,
                         score=score_obj.total_score,
                         listing_title=listing.title,
                         listing_address=listing.address,
                         delta_rent=score_obj.delta_rent,
-                        delta_surface=score_obj.delta_surface,
-                        delta_commute=score_obj.delta_commute_minutes,
                         recommendation=score_obj.recommendation,
                         listing_url=listing.source_url,
                     )

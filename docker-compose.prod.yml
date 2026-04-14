@@ -58,6 +58,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - FRONTEND_URL=${FRONTEND_URL}
       - APP_ENV=${APP_ENV:-production}
+      - RESEND_API_KEY=${RESEND_API_KEY}
     depends_on:
       db:
         condition: service_healthy
@@ -85,6 +86,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - FRONTEND_URL=${FRONTEND_URL}
       - APP_ENV=${APP_ENV:-production}
+      - RESEND_API_KEY=${RESEND_API_KEY}
     command: celery -A app.worker worker --beat --loglevel=info --concurrency=2
     depends_on:
       db:

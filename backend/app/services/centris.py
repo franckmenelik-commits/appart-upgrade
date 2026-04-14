@@ -22,20 +22,9 @@ Chaque page contient ~20 cartes avec :
 import re
 from dataclasses import dataclass, field
 
-import httpx
 from bs4 import BeautifulSoup
 
 BASE_URL = "https://www.centris.ca"
-
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/125.0.0.0 Safari/537.36"
-    ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "fr-CA,fr;q=0.9,en;q=0.8",
-}
 
 # URLs de recherche location Centris
 SEARCH_URLS = [
@@ -177,13 +166,16 @@ async def scrape_centris(
     all_listings: list[CentrisListing] = []
     seen_ids: set[str] = set()
 
-    async with httpx.AsyncClient(headers=HEADERS, timeout=30.0, follow_redirects=True) as client:
-        for search_url in SEARCH_URLS:
+    from app.services.scraping_utils import ResilientSession
+    session = ResilientSession(base_delay=1.5)
+
+    for search_url in SEARCH_URLS:
             url = f"{BASE_URL}{search_url}"
             try:
-                resp = await client.get(url)
-                resp.raise_for_status()
-            except httpx.HTTPError as e:
+                resp = await session.get(url, referer=BASE_URL)
+                if resp is None or not resp.is_success:
+                    continue
+            except Exception:
                 continue
 
             page_listings = _parse_listings_from_html(resp.text)
