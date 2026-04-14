@@ -50,12 +50,18 @@ export const api = {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     }),
 
-  // Billing
+  // Billing (auth required)
   getPlans: () => request("/billing/plans"),
-  createCheckout: (userId: string, plan: string) =>
-    request(`/billing/checkout/${userId}/${plan}`, { method: "POST" }),
-  getPortalUrl: (userId: string) =>
-    request(`/billing/portal/${userId}`, { method: "POST" }),
+  createCheckout: (token: string, plan: string) =>
+    request(`/billing/checkout/${plan}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    }),
+  getPortalUrl: (token: string) =>
+    request("/billing/portal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    }),
 
   // Scraping
   triggerCentrisScrape: (params?: { min_price?: number; max_price?: number }) =>

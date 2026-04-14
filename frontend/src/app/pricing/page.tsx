@@ -1,5 +1,6 @@
 "use client";
 
+import { api } from "@/lib/api";
 import Link from "next/link";
 
 const PLANS = [
@@ -53,6 +54,24 @@ const PLANS = [
 ];
 
 export default function PricingPage() {
+  const handleCheckout = async (planId: string) => {
+    if (planId === "free") {
+      window.location.href = "/setup";
+      return;
+    }
+    const token = localStorage.getItem("vivenza_token");
+    if (!token) {
+      window.location.href = `/setup?next=pricing`;
+      return;
+    }
+    try {
+      const result = (await api.createCheckout(token, planId)) as { checkout_url: string };
+      window.location.href = result.checkout_url;
+    } catch {
+      window.location.href = "/setup";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[var(--background)]">
       {/* Nav */}
@@ -110,6 +129,7 @@ export default function PricingPage() {
                 </ul>
 
                 <button
+                  onClick={() => handleCheckout(plan.id)}
                   className={`w-full py-3 rounded-xl font-medium text-sm transition-all ${
                     plan.highlighted
                       ? "bg-blue-600 text-white hover:bg-blue-700 btn-shine"

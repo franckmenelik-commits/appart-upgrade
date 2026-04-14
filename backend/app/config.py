@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     gemini_api_key: str = ""
     google_maps_api_key: str = ""
+    # Email alerts
+    resend_api_key: str = ""
+    # Alert threshold (score minimum pour envoyer un email)
+    alert_score_threshold: int = 70
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
     jwt_secret: str = "change-me-in-production-use-openssl-rand-hex-32"

@@ -19,8 +19,11 @@ from sqlalchemy.orm import Session
 from app.models.baseline import Baseline
 from app.models.listing import Listing
 from app.models.score import UpgradeScore
+from app.models.user import User
 from app.services.centris import CentrisListing, scrape_centris
+from app.services.email_alerts import send_score_alert
 from app.services.extractor import extract_listing_data
+from app.services.kijiji import scrape_kijiji
 from app.services.scoring import compute_upgrade_score
 
 logger = logging.getLogger(__name__)
@@ -205,6 +208,31 @@ async def score_listings_for_user(
         for s in scores:
             db.refresh(s)
 
+        # Alertes email pour les scores élevés (users Pro/Premium)
+        user = db.get(User, user_id)
+        if user and user.plan in ("pro", "premium") and user.email:
+            from app.config import settings
+            threshold = settings.alert_score_threshold
+            high_scores = [
+                (s, db.get(Listing, s.listing_id))
+                for s in scores
+                if s.total_score >= threshold
+            ]
+            for score_obj, listing in high_scores:
+                if listing:
+                    await send_score_alert(
+                        to_email=user.email,
+                        user_name=user.name,
+                        score=score_obj.total_score,
+                        listing_title=listing.title,
+                        listing_address=listing.address,
+                        delta_rent=score_obj.delta_rent,
+                        delta_surface=score_obj.delta_surface,
+                        delta_commute=score_obj.delta_commute_minutes,
+                        recommendation=score_obj.recommendation,
+                        listing_url=listing.source_url,
+                    )
+
     logger.info(
         "Scoring: %d scores créés pour user %s (sur %d listings, 5 en parallèle)",
         len(scores), user_id[:8], len(to_score),
@@ -212,9 +240,52 @@ async def score_listings_for_user(
     return scores
 
 
+async def ingest_kijiji_listings(
+    db: Session,
+    min_price: int = 800,
+    max_price: int = 3500,
+) -> list[Listing]:
+    """Scrape Kijiji et insère les nouvelles annonces en DB."""
+    raw_listings = await scrape_kijiji(min_price=min_price, max_price=max_price)
+
+    existing_ids = set(db.scalars(select(Listing.source_id)).all())
+    new_raws = [r for r in raw_listings if r.source_id not in existing_ids]
+
+    if not new_raws:
+        return []
+
+    new_listings = []
+    for raw in new_raws:
+        listing = Listing(
+            source="kijiji",
+            source_id=raw.source_id,
+            source_url=raw.source_url,
+            title=raw.title,
+            description_raw=raw.description_raw,
+            address=raw.address,
+            city=raw.city,
+            rent_monthly=raw.price_value,
+            image_urls=[raw.image_url] if raw.image_url else None,
+        )
+        db.add(listing)
+        new_listings.append(listing)
+
+    if new_listings:
+        db.commit()
+        for l in new_listings:
+            db.refresh(l)
+
+    logger.info("Kijiji: %d nouvelles annonces", len(new_listings))
+    return new_listings
+
+
 async def run_full_pipeline(db: Session) -> dict:
-    """Pipeline complet : scrape → ingest → score pour tous les utilisateurs actifs."""
-    new_listings = await ingest_centris_listings(db)
+    """Pipeline complet : scrape Centris + Kijiji → score → alertes email."""
+    # Scrape les deux sources en parallèle
+    centris_task = ingest_centris_listings(db)
+    kijiji_task = ingest_kijiji_listings(db)
+    centris_listings, kijiji_listings = await asyncio.gather(centris_task, kijiji_task)
+    new_listings = centris_listings + kijiji_listings
 
     baselines = list(db.scalars(select(Baseline)))
     total_scores = 0

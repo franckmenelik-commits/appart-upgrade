@@ -1,43 +1,20 @@
 """
-Intégration Stripe — Gestion des abonnements.
+Intégration Stripe — Vivenza.
 
-== Modèle de monétisation ==
-
-GRATUIT (Free) :
-  - 5 scores/mois (pour tester le produit)
-  - Sources : entrée manuelle uniquement
-  - Pas de notifications
-
-PRO (9.99$/mois) :
-  - Scores illimités
-  - Scraping Centris automatique (toutes les 6h)
-  - Extension Chrome Marketplace activée
-  - Notifications par email des top scores (70+)
-
-PREMIUM (19.99$/mois) :
-  - Tout Pro +
-  - Analyse d'images par Claude Vision
-  - Calcul de trajet via Google Maps
-  - Alertes push temps réel (score 80+)
-  - Accès API pour automatisations personnelles
-  - Support prioritaire
-
-== Pourquoi ces tiers marchent ==
-
-Le Free hook l'utilisateur avec 5 scores — assez pour voir la valeur,
-pas assez pour remplacer la recherche manuelle. Le passage à Pro est
-naturel quand l'utilisateur veut automatiser. Le Premium se justifie
-par l'analyse d'images (coûte en tokens Claude) et l'API Google Maps.
+Plans :
+- Free  : 5 scores/mois, manuel
+- Pro   : 9.99 CAD/mois — scores illimités, scraping auto, email alerts
+- Premium : 19.99 CAD/mois — tout Pro + Google Maps, push alerts, API
 """
+
+from __future__ import annotations
 
 import stripe
 
 from app.config import settings
 
-# Stripe setup
 stripe.api_key = settings.stripe_secret_key
 
-# Plan IDs — à créer dans le dashboard Stripe ou via l'API
 PLANS = {
     "free": {
         "name": "Gratuit",
@@ -47,18 +24,18 @@ PLANS = {
     },
     "pro": {
         "name": "Pro",
-        "price_monthly": 999,  # en cents
-        "scores_per_month": -1,  # illimité
+        "price_monthly": 999,
+        "scores_per_month": -1,
         "features": [
             "Scores illimités",
-            "Scraping Centris auto",
-            "Extension Marketplace",
-            "Notifications email",
+            "Scraping Centris + Kijiji auto",
+            "Extension Chrome Marketplace",
+            "Alertes email (score 70+)",
         ],
     },
     "premium": {
         "name": "Premium",
-        "price_monthly": 1999,  # en cents
+        "price_monthly": 1999,
         "scores_per_month": -1,
         "features": [
             "Tout Pro +",
@@ -71,29 +48,32 @@ PLANS = {
 }
 
 
-async def create_checkout_session(
+def create_checkout_session(
     user_id: str,
     plan: str,
     success_url: str,
     cancel_url: str,
+    user_email: str | None = None,
 ) -> str:
-    """Crée une session Stripe Checkout et retourne l'URL de paiement."""
+    """Crée une session Stripe Checkout — retourne l'URL de paiement."""
     if plan not in ("pro", "premium"):
-        raise ValueError("Plan invalide — seuls 'pro' et 'premium' sont payants")
+        raise ValueError(f"Plan invalide: {plan}")
+
+    plan_data = PLANS[plan]
 
     session = stripe.checkout.Session.create(
         mode="subscription",
-        customer_email=None,  # sera rempli par Stripe
+        customer_email=user_email,
         metadata={"user_id": user_id, "plan": plan},
         line_items=[
             {
                 "price_data": {
                     "currency": "cad",
                     "product_data": {
-                        "name": f"AppartUpgrade {PLANS[plan]['name']}",
-                        "description": " | ".join(PLANS[plan]["features"]),
+                        "name": f"Vivenza {plan_data['name']}",
+                        "description": " · ".join(plan_data["features"]),
                     },
-                    "unit_amount": PLANS[plan]["price_monthly"],
+                    "unit_amount": plan_data["price_monthly"],
                     "recurring": {"interval": "month"},
                 },
                 "quantity": 1,
@@ -105,8 +85,8 @@ async def create_checkout_session(
     return session.url
 
 
-async def create_portal_session(customer_id: str, return_url: str) -> str:
-    """Crée un lien vers le portail Stripe pour gérer l'abonnement."""
+def create_portal_session(customer_id: str, return_url: str) -> str:
+    """Portail Stripe pour gérer/annuler l'abonnement."""
     session = stripe.billing_portal.Session.create(
         customer=customer_id,
         return_url=return_url,
@@ -115,7 +95,7 @@ async def create_portal_session(customer_id: str, return_url: str) -> str:
 
 
 def handle_webhook_event(payload: bytes, sig_header: str) -> dict:
-    """Traite un webhook Stripe (paiement réussi, annulation, etc.)."""
+    """Traite les webhooks Stripe et retourne l'action à effectuer."""
     event = stripe.Webhook.construct_event(
         payload,
         sig_header,
@@ -124,45 +104,35 @@ def handle_webhook_event(payload: bytes, sig_header: str) -> dict:
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
-        user_id = session["metadata"]["user_id"]
-        plan = session["metadata"]["plan"]
-        customer_id = session["customer"]
-        subscription_id = session["subscription"]
         return {
             "action": "activate",
-            "user_id": user_id,
-            "plan": plan,
-            "customer_id": customer_id,
-            "subscription_id": subscription_id,
+            "user_id": session["metadata"]["user_id"],
+            "plan": session["metadata"]["plan"],
+            "customer_id": session["customer"],
+            "subscription_id": session["subscription"],
         }
 
     if event["type"] == "customer.subscription.deleted":
         subscription = event["data"]["object"]
-        customer_id = subscription["customer"]
         return {
             "action": "deactivate",
-            "customer_id": customer_id,
+            "customer_id": subscription["customer"],
         }
 
     if event["type"] == "invoice.payment_failed":
-        invoice = event["data"]["object"]
-        customer_id = invoice["customer"]
         return {
             "action": "payment_failed",
-            "customer_id": customer_id,
+            "customer_id": event["data"]["object"]["customer"],
         }
 
     return {"action": "ignored", "type": event["type"]}
 
 
 def check_user_quota(plan: str, scores_used: int) -> bool:
-    """Vérifie si l'utilisateur peut encore scorer (quota mensuel)."""
+    """Vérifie si l'utilisateur peut encore scorer."""
     limit = PLANS.get(plan, PLANS["free"])["scores_per_month"]
-    if limit == -1:
-        return True
-    return scores_used < limit
+    return limit == -1 or scores_used < limit
 
 
 def get_plan_features(plan: str) -> dict:
-    """Retourne les features d'un plan."""
     return PLANS.get(plan, PLANS["free"])
