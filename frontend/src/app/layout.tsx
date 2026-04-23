@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import CookieConsent from "@/components/CookieConsent";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,8 +19,6 @@ export const metadata: Metadata = {
   description: "Moteur de recommandation d'appartements à Montréal. Évaluez vos upgrades en un score de 0 à 100.",
 };
 
-import CookieConsent from "@/components/CookieConsent";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="fr"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

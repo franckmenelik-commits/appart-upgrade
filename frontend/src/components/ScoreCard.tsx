@@ -33,15 +33,14 @@ function DeltaChip({ value, unit, label, icon }: { value: number; unit: string; 
 
 export default function ScoreCard({ score }: { score: UpgradeScore }) {
   const { listing } = score;
-  const imageUrl = listing.image_urls?.[0];
 
   return (
     <div className="group rounded-2xl overflow-hidden border border-[var(--card-border)] bg-white dark:bg-[#141413] shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500">
       <div className="relative h-56 bg-gray-100 overflow-hidden">
-        {imageUrl ? (
+        {listing.image_urls && listing.image_urls.length > 0 ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={imageUrl}
+            src={listing.image_urls[0]}
             alt={listing.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           />

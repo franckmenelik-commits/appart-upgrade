@@ -45,8 +45,8 @@ export default function BaselineForm({
     num_bedrooms: initialData?.num_bedrooms || 1,
     num_bathrooms: initialData?.num_bathrooms || 1,
     floor: initialData?.floor ?? null,
-    amenities_current: initialData?.amenities_current || [],
-    amenities_desired: initialData?.amenities_desired || [],
+    amenities_current: Array.isArray(initialData?.amenities_current) ? initialData.amenities_current : [],
+    amenities_desired: Array.isArray(initialData?.amenities_desired) ? initialData.amenities_desired : [],
     commute_work_address: initialData?.commute_work_address || "",
     commute_uni_address: initialData?.commute_uni_address || "",
     priorities: initialData?.priorities || { price: 5, space: 5, commute: 5, amenities: 5, quality: 5 },
@@ -86,7 +86,7 @@ export default function BaselineForm({
     onSubmit(form);
   };
 
-  const set = <K extends keyof BaselineFormData>(field: K, value: BaselineFormData[K]) =>
+  const set = <K extends keyof BaselineFormData>(field: K, value: BaselineFormData[K]): void =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const setPriority = (field: string, value: number) =>
