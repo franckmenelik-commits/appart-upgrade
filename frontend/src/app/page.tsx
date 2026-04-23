@@ -10,6 +10,7 @@ export default function Home() {
             V
           </div>
           <span className="text-xl font-bold tracking-tight">Vivenza</span>
+          <span className="ml-4 text-[8px] bg-red-500 text-white px-2 py-0.5 rounded animate-pulse">LIVE UPDATE 18h15</span>
         </div>
         <div className="flex items-center gap-4">
           <Link href="/pricing" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
