@@ -95,7 +95,7 @@ export default function PricingPage() {
             <div
               key={plan.id}
               className={`rounded-2xl p-px ${
-                plan.highlighted ? "conic-border" : ""
+                plan.highlighted ? "pro-card-border" : ""
               }`}
             >
               <div className={`rounded-2xl p-6 h-full ${

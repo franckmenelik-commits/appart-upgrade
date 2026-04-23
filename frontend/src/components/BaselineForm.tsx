@@ -58,8 +58,9 @@ export default function BaselineForm({
 
   useEffect(() => {
     const setupAutocomplete = (ref: React.RefObject<HTMLInputElement>, field: keyof BaselineFormData) => {
-      if (typeof window !== "undefined" && window.google && ref.current) {
-        const autocomplete = new window.google.maps.places.Autocomplete(ref.current, {
+      const g = (window as any).google;
+      if (g && g.maps && g.maps.places && ref.current) {
+        const autocomplete = new g.maps.places.Autocomplete(ref.current, {
           componentRestrictions: { country: "ca" },
           fields: ["formatted_address", "geometry"],
         });
@@ -86,7 +87,7 @@ export default function BaselineForm({
     onSubmit(form);
   };
 
-  const set = <K extends keyof BaselineFormData>(field: K, value: BaselineFormData[K]): void =>
+  const set = <K extends keyof BaselineFormData,>(field: K, value: BaselineFormData[K]): void =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const setPriority = (field: string, value: number) =>
