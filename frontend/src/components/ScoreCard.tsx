@@ -46,7 +46,9 @@ export default function ScoreCard({ score }: { score: UpgradeScore }) {
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
-            <span className="text-4xl opacity-20">🏠</span>
+            <svg className="w-12 h-12 text-blue-600/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
           </div>
         )}
 
@@ -74,26 +76,29 @@ export default function ScoreCard({ score }: { score: UpgradeScore }) {
         <h3 className="font-bold text-sm text-[var(--foreground)] truncate mb-1">{listing.title}</h3>
         {listing.address && (
           <div className="flex items-center gap-1.5 text-[var(--muted)] text-xs mb-4">
-            <span className="opacity-50">📍</span>
+            <svg className="w-3 h-3 text-blue-600 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
             <span className="truncate">{listing.address}</span>
           </div>
         )}
 
         <div className="flex flex-wrap gap-2 mb-5">
-          <DeltaChip value={score.delta_rent} unit="$" label="loyer" icon="💰" />
+          <DeltaChip value={score.delta_rent} unit="$" label="loyer" />
           {score.delta_surface != null && (
-            <DeltaChip value={Math.round(score.delta_surface)} unit="ft²" label="espace" icon="📐" />
+            <DeltaChip value={Math.round(score.delta_surface)} unit="ft²" label="espace" />
           )}
           {score.delta_commute_minutes != null && (
-            <DeltaChip value={Math.round(-score.delta_commute_minutes)} unit="m" label="trajet" icon="⚡" />
+            <DeltaChip value={Math.round(-score.delta_commute_minutes)} unit="m" label="trajet" />
           )}
         </div>
 
         <div className="space-y-3 mb-6">
           {[
-            { label: "💰 Prix", value: score.price_score },
-            { label: "📐 Espace", value: score.space_score },
-            { label: "⚡ Trajet", value: score.commute_score },
+            { label: "Prix", value: score.price_score },
+            { label: "Espace", value: score.space_score },
+            { label: "Trajet", value: score.commute_score },
           ].map(({ label, value }) => (
             <div key={label} className="space-y-1">
               <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-tighter opacity-70">

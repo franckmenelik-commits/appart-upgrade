@@ -16,7 +16,13 @@ function BlurredCard({ score, onUnlock }: { score: UpgradeScore; onUnlock: () =>
       </div>
       <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 dark:bg-black/40 backdrop-blur-[4px]">
         <div className="text-center p-6 bg-white/90 dark:bg-black/90 rounded-2xl shadow-2xl border border-white/20 max-w-[80%]">
-          <div className="text-3xl mb-3">💎</div>
+          <div className="flex justify-center mb-4">
+            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-950 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </div>
+          </div>
           <div className="font-bold text-lg mb-1">
             Recommandation <span className="text-blue-600">Premium</span>
           </div>
@@ -183,11 +189,15 @@ export default function DashboardPage() {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-32 opacity-50">
               <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
-              <div className="font-bold uppercase tracking-widest text-xs">Analyse du marché...</div>
+              <div className="font-bold uppercase tracking-widest text-xs text-blue-600">Analyse du marché...</div>
             </div>
           ) : filteredScores.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center max-w-sm mx-auto">
-              <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center text-4xl mb-6">🔍</div>
+              <div className="w-20 h-20 bg-blue-50 dark:bg-blue-950 rounded-full flex items-center justify-center mb-6">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
               <h2 className="text-2xl font-bold mb-3">Silence radio</h2>
               <p className="text-[var(--muted)] text-sm mb-8">
                 On scrute Montréal en continu. Dés que l&apos;algorithme détecte un upgrade par rapport à ton logement actuel, il apparaîtra ici.
@@ -217,7 +227,10 @@ export default function DashboardPage() {
                 <div className="pt-8 border-t-2 border-dashed border-[var(--card-border)]">
                   <div className="mb-8 flex items-center justify-between">
                     <h2 className="text-xs font-black uppercase tracking-[0.2em] text-amber-600 flex items-center gap-2">
-                      🔒 Résultats Premium ({lockedScores.length})
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      Résultats Premium ({lockedScores.length})
                     </h2>
                     <Link href="/pricing" className="text-xs font-bold text-blue-600 underline">Tout débloquer</Link>
                   </div>
