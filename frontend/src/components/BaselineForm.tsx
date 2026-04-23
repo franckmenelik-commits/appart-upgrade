@@ -308,6 +308,9 @@ export default function BaselineForm({
           {submitText}
         </button>
       </div>
+      <div className="text-center opacity-20 text-[8px] font-black uppercase tracking-[0.3em] pb-8">
+        Vivenza Engine v2.1 — Stable
+      </div>
     </form>
   );
 }
