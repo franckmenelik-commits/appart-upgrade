@@ -41,8 +41,19 @@ export default function SettingsPage() {
       const userId = localStorage.getItem("vivenza_user_id");
       if (!userId) throw new Error("Non connecté");
 
-      await api.updateBaseline(userId, data as unknown as Record<string, unknown>);
-      setSuccess("Baseline mis à jour avec succès !");
+      try {
+        // Try to update first
+        await api.updateBaseline(userId, data as unknown as Record<string, unknown>);
+      } catch (err: any) {
+        // If update fails because it doesn't exist (404), create it
+        if (err.message.includes("404") || err.message.includes("Not Found")) {
+          await api.createBaseline(userId, data as unknown as Record<string, unknown>);
+        } else {
+          throw err;
+        }
+      }
+      
+      setSuccess("Baseline sauvegardé avec succès !");
       setTimeout(() => router.push("/dashboard"), 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur de mise à jour");
