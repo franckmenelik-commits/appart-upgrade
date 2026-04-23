@@ -103,6 +103,13 @@ services:
     restart: always
     environment:
       - NEXT_PUBLIC_API_URL=${BACKEND_URL}/api/v1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vivenza-frontend.rule=Host(`vivenza.ca`) || Host(`www.vivenza.ca`)"
+      - "traefik.http.routers.vivenza-frontend.entrypoints=websecure"
+      - "traefik.http.routers.vivenza-frontend.tls=true"
+      - "traefik.http.routers.vivenza-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.vivenza-frontend.loadbalancer.server.port=3000"
 
 volumes:
   pgdata:
