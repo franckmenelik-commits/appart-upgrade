@@ -80,14 +80,17 @@ export default function SettingsPage() {
         )}
 
         {loading ? (
-          <div className="text-center py-20 text-[var(--muted)]">Chargement...</div>
-        ) : baseline ? (
+          <div className="text-center py-20 text-[var(--muted)]">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            Chargement de tes données...
+          </div>
+        ) : (
           <BaselineForm 
-            initialData={baseline} 
+            initialData={baseline || undefined} 
             onSubmit={handleUpdate} 
-            submitText="Mettre à jour" 
+            submitText={baseline ? "Mettre à jour" : "Créer mon profil"} 
           />
-        ) : null}
+        )}
       </div>
     </div>
   );
