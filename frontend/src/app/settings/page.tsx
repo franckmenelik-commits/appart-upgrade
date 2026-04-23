@@ -23,8 +23,11 @@ export default function SettingsPage() {
       try {
         const data = await api.getBaseline(userId) as BaselineFormData;
         setBaseline(data);
-      } catch (err) {
-        setError("Impossible de charger ton baseline.");
+      } catch (err: any) {
+        // If 404, it's just a new user, no need to show an error
+        if (!err.message.includes("404") && !err.message.includes("Not Found")) {
+          setError("Impossible de charger ton baseline.");
+        }
       } finally {
         setLoading(false);
       }
