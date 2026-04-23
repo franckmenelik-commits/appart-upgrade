@@ -57,28 +57,38 @@ export default function BaselineForm({
   const uniRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const setupAutocomplete = (ref: React.RefObject<HTMLInputElement>, field: keyof BaselineFormData) => {
+    const setupAutocomplete = async (ref: React.RefObject<HTMLInputElement>, field: keyof BaselineFormData) => {
       const g = (window as any).google;
-      if (g && g.maps && g.maps.places && ref.current) {
+      if (!g || !ref.current) return;
+
+      try {
+        // Try to load the new Places library
+        const { PlaceAutocompleteElement } = await g.maps.importLibrary("places");
+        
+        // If the new element isn't available or we want to stay with the classic JS approach
+        // but using the NEW API, we ensure the library is loaded.
+        
         const autocomplete = new g.maps.places.Autocomplete(ref.current, {
           componentRestrictions: { country: "ca" },
           fields: ["formatted_address", "geometry"],
         });
+
         autocomplete.addListener("place_changed", () => {
           const place = autocomplete.getPlace();
           if (place.formatted_address) {
             setForm(prev => ({ ...prev, [field]: place.formatted_address }));
           }
         });
+      } catch (err) {
+        console.error("Autocomplete setup failed:", err);
       }
     };
 
-    // Give a small delay to ensure script is loaded
     const timer = setTimeout(() => {
       setupAutocomplete(addrRef, "address");
       setupAutocomplete(workRef, "commute_work_address");
       setupAutocomplete(uniRef, "commute_uni_address");
-    }, 1000);
+    }, 1500);
     return () => clearTimeout(timer);
   }, []);
 
