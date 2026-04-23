@@ -20,6 +20,7 @@ export interface BaselineFormData {
   amenities_desired: string[];
   commute_work_address: string;
   commute_uni_address: string;
+  prefer_equidistance: boolean;
   priorities: {
     price: number;
     space: number;
@@ -49,6 +50,7 @@ export default function BaselineForm({
     amenities_desired: Array.isArray(initialData?.amenities_desired) ? initialData.amenities_desired : [],
     commute_work_address: initialData?.commute_work_address || "",
     commute_uni_address: initialData?.commute_uni_address || "",
+    prefer_equidistance: initialData?.prefer_equidistance || false,
     priorities: initialData?.priorities || { price: 5, space: 5, commute: 5, amenities: 5, quality: 5 },
   });
 
@@ -226,6 +228,24 @@ export default function BaselineForm({
         </div>
       </section>
 
+      {/* Option Equidistance */}
+      {(form.commute_work_address && form.commute_uni_address) && (
+        <div className="mt-[-0.5rem] mb-12 p-5 rounded-3xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100/50 dark:border-blue-900/20 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="pr-4">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-1">Stratégie Trajet</div>
+            <div className="text-xs font-bold mb-1">Privilégier l&apos;équidistance ?</div>
+            <p className="text-[10px] text-[var(--muted)] leading-relaxed">L&apos;algorithme cherchera un point d&apos;équilibre entre tes deux destinations plutôt que de privilégier l&apos;une d&apos;elles.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => set("prefer_equidistance", !form.prefer_equidistance)}
+            className={`w-12 h-6 rounded-full transition-all relative shrink-0 shadow-sm ${form.prefer_equidistance ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-800"}`}
+          >
+            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all ${form.prefer_equidistance ? "left-7" : "left-1"}`} />
+          </button>
+        </div>
+      )}
+
       <section>
         <h2 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-6 flex items-center gap-2">
           <span className="w-8 h-px bg-blue-600/20" />
@@ -277,12 +297,17 @@ export default function BaselineForm({
         </div>
       </section>
 
-      <button
-        type="submit"
-        className="w-full rounded-2xl bg-blue-600 py-5 text-white font-black uppercase tracking-widest hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-blue-100"
-      >
-        {submitText}
-      </button>
+      <div className="pt-8 pb-12">
+        <button
+          type="submit"
+          className="w-full rounded-2xl bg-blue-600 py-5 text-white font-black uppercase tracking-widest hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-blue-100 flex items-center justify-center gap-3"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          {submitText}
+        </button>
+      </div>
     </form>
   );
 }

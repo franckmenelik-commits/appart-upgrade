@@ -33,6 +33,7 @@ class Baseline(Base):
     commute_work_address: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     commute_uni_address: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     commute_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    prefer_equidistance: Mapped[bool] = mapped_column(default=False)
     amenities_current: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True, default=[])
     amenities_desired: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True, default=[])
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
