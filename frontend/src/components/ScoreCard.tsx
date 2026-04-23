@@ -1,4 +1,5 @@
 import { UpgradeScore } from "@/types";
+import Link from "next/link";
 
 function ScoreBadge({ score }: { score: number }) {
   const bg = score >= 70 ? "bg-green-600 shadow-green-100" : score >= 40 ? "bg-yellow-500 shadow-yellow-100" : "bg-red-500 shadow-red-100";

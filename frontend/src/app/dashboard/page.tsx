@@ -11,7 +11,7 @@ const FREE_VISIBLE_COUNT = 5;
 function BlurredCard({ score, onUnlock }: { score: UpgradeScore; onUnlock: () => void }) {
   return (
     <div className="relative rounded-2xl overflow-hidden border border-[var(--card-border)] bg-[var(--card)] shadow-sm">
-      <div className="blur-md pointer-events-none select-none grayscale opactiy-50">
+      <div className="blur-md pointer-events-none select-none grayscale opacity-50">
         <ScoreCard score={score} />
       </div>
       <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 dark:bg-black/40 backdrop-blur-[4px]">

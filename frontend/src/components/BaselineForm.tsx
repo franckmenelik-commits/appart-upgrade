@@ -3,6 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import TagInput from "./TagInput";
 
+declare global {
+  interface Window {
+    google: any;
+  }
+}
+
 export interface BaselineFormData {
   address: string;
   rent_monthly: number;
