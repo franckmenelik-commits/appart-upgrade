@@ -189,10 +189,10 @@ export default function BaselineForm({
         </div>
       </section>
 
-      <section className={form.commute_work_address || form.commute_uni_address ? "opacity-100" : "opacity-80 transition-opacity"}>
+      <section>
         <h2 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-6 flex items-center gap-2">
           <span className="w-8 h-px bg-blue-600/20" />
-          Tes destinations (Optionnel)
+          Tes destinations & Stratégie
         </h2>
         <div className="space-y-4">
           <div className="relative group">
@@ -226,25 +226,63 @@ export default function BaselineForm({
             />
           </div>
         </div>
+
+        {/* Option Equidistance */}
+        {(form.commute_work_address && form.commute_uni_address) && (
+          <div className="mt-6 p-5 rounded-3xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100/50 dark:border-blue-900/20 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-500">
+            <div className="pr-4">
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-1">Stratégie Trajet</div>
+              <div className="text-xs font-bold mb-1">Privilégier l&apos;équidistance ?</div>
+              <p className="text-[10px] text-[var(--muted)] leading-relaxed">L&apos;algorithme cherchera un point d&apos;équilibre entre tes deux destinations plutôt que de privilégier l&apos;une d&apos;elles.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => set("prefer_equidistance", !form.prefer_equidistance)}
+              className={`w-12 h-6 rounded-full transition-all relative shrink-0 shadow-sm ${form.prefer_equidistance ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-800"}`}
+            >
+              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all ${form.prefer_equidistance ? "left-7" : "left-1"}`} />
+            </button>
+          </div>
+        )}
       </section>
 
-      {/* Option Equidistance */}
-      {(form.commute_work_address && form.commute_uni_address) && (
-        <div className="mt-[-0.5rem] mb-12 p-5 rounded-3xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100/50 dark:border-blue-900/20 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-500">
-          <div className="pr-4">
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-1">Stratégie Trajet</div>
-            <div className="text-xs font-bold mb-1">Privilégier l&apos;équidistance ?</div>
-            <p className="text-[10px] text-[var(--muted)] leading-relaxed">L&apos;algorithme cherchera un point d&apos;équilibre entre tes deux destinations plutôt que de privilégier l&apos;une d&apos;elles.</p>
+      <section>
+        <h2 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-6 flex items-center gap-2">
+          <span className="w-8 h-px bg-blue-600/20" />
+          Ton Manifeste (Cible)
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-3">Budget Loyer Max ($)</label>
+            <input
+              type="number"
+              value={form.search_budget_max || ""}
+              onChange={(e) => set("search_budget_max", parseFloat(e.target.value))}
+              className="w-full rounded-2xl border border-[var(--card-border)] bg-[var(--card)] px-5 py-4 text-sm focus:ring-2 ring-blue-100 transition-all outline-none"
+              placeholder="Ex: 2500"
+            />
           </div>
-          <button
-            type="button"
-            onClick={() => set("prefer_equidistance", !form.prefer_equidistance)}
-            className={`w-12 h-6 rounded-full transition-all relative shrink-0 shadow-sm ${form.prefer_equidistance ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-800"}`}
-          >
-            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all ${form.prefer_equidistance ? "left-7" : "left-1"}`} />
-          </button>
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-3">Surface Min (sqft)</label>
+            <input
+              type="number"
+              value={form.search_surface_min || ""}
+              onChange={(e) => set("search_surface_min", parseFloat(e.target.value))}
+              className="w-full rounded-2xl border border-[var(--card-border)] bg-[var(--card)] px-5 py-4 text-sm focus:ring-2 ring-blue-100 transition-all outline-none"
+              placeholder="Ex: 800"
+            />
+          </div>
         </div>
-      )}
+        <div>
+          <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-3">Où veux-tu vivre ? (Quartiers)</label>
+          <TagInput 
+            tags={form.search_neighborhoods || []} 
+            onChange={(tags) => set("search_neighborhoods", tags)}
+            placeholder="Ex: Vieux-Port, Plateau, Mile-End..."
+          />
+          <p className="text-[10px] text-[var(--muted)] mt-2 italic">Laisse vide pour chercher partout dans Montréal.</p>
+        </div>
+      </section>
 
       <section>
         <h2 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-6 flex items-center gap-2">

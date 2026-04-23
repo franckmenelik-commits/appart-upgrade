@@ -47,5 +47,10 @@ class Baseline(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+    
+    # Nouvelles contraintes de recherche
+    search_budget_max: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    search_surface_min: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    search_neighborhoods: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True, default=[])
 
     user: Mapped["User"] = relationship(back_populates="baseline")

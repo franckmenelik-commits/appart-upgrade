@@ -32,6 +32,9 @@ class BaselineCreate(BaseModel):
     prefer_equidistance: bool = False
     amenities_current: list[str] | None = []
     amenities_desired: list[str] | None = []
+    search_budget_max: float | None = None
+    search_surface_min: float | None = None
+    search_neighborhoods: list[str] | None = []
     notes: str | None = None
     priorities: Priorities = Priorities()
 
@@ -53,6 +56,9 @@ class BaselineUpdate(BaseModel):
     prefer_equidistance: bool | None = None
     amenities_current: list[str] | None = None
     amenities_desired: list[str] | None = None
+    search_budget_max: float | None = None
+    search_surface_min: float | None = None
+    search_neighborhoods: list[str] | None = None
     notes: str | None = None
     priorities: Priorities | None = None
 
@@ -78,6 +84,9 @@ class BaselineResponse(BaseModel):
     prefer_equidistance: bool
     amenities_current: list[str] | None
     amenities_desired: list[str] | None
+    search_budget_max: float | None
+    search_surface_min: float | None
+    search_neighborhoods: list[str] | None
     priorities: dict | None
     created_at: datetime
     updated_at: datetime
