@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import TagInput from "./TagInput";
 
 export interface BaselineFormData {
   address: string;
@@ -9,12 +10,10 @@ export interface BaselineFormData {
   num_bedrooms: number;
   num_bathrooms: number;
   floor: number | null;
-  has_balcony: boolean;
-  has_dishwasher: boolean;
-  has_laundry_inunit: boolean;
-  has_parking: boolean;
-  pet_friendly: boolean;
+  amenities_current: string[];
+  amenities_desired: string[];
   commute_work_address: string;
+  commute_uni_address: string;
   priorities: {
     price: number;
     space: number;
@@ -27,7 +26,7 @@ export interface BaselineFormData {
 export default function BaselineForm({
   onSubmit,
   initialData,
-  submitText = "Enregistrer mon baseline",
+  submitText = "C'est parti",
 }: {
   onSubmit: (data: BaselineFormData) => void;
   initialData?: Partial<BaselineFormData>;
@@ -40,14 +39,41 @@ export default function BaselineForm({
     num_bedrooms: initialData?.num_bedrooms || 1,
     num_bathrooms: initialData?.num_bathrooms || 1,
     floor: initialData?.floor ?? null,
-    has_balcony: initialData?.has_balcony || false,
-    has_dishwasher: initialData?.has_dishwasher || false,
-    has_laundry_inunit: initialData?.has_laundry_inunit || false,
-    has_parking: initialData?.has_parking || false,
-    pet_friendly: initialData?.pet_friendly || false,
+    amenities_current: initialData?.amenities_current || [],
+    amenities_desired: initialData?.amenities_desired || [],
     commute_work_address: initialData?.commute_work_address || "",
+    commute_uni_address: initialData?.commute_uni_address || "",
     priorities: initialData?.priorities || { price: 5, space: 5, commute: 5, amenities: 5, quality: 5 },
   });
+
+  const addrRef = useRef<HTMLInputElement>(null);
+  const workRef = useRef<HTMLInputElement>(null);
+  const uniRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const setupAutocomplete = (ref: React.RefObject<HTMLInputElement>, field: keyof BaselineFormData) => {
+      if (typeof window !== "undefined" && window.google && ref.current) {
+        const autocomplete = new window.google.maps.places.Autocomplete(ref.current, {
+          componentRestrictions: { country: "ca" },
+          fields: ["formatted_address", "geometry"],
+        });
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (place.formatted_address) {
+            setForm(prev => ({ ...prev, [field]: place.formatted_address }));
+          }
+        });
+      }
+    };
+
+    // Give a small delay to ensure script is loaded
+    const timer = setTimeout(() => {
+      setupAutocomplete(addrRef, "address");
+      setupAutocomplete(workRef, "commute_work_address");
+      setupAutocomplete(uniRef, "commute_uni_address");
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -64,143 +90,151 @@ export default function BaselineForm({
     }));
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <h2 className="text-xl font-bold">Ton appartement actuel</h2>
-
-      {/* Infos principales */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
-          <label className="block text-sm font-medium mb-1">Adresse</label>
-          <input
-            type="text"
-            value={form.address}
-            onChange={(e) => set("address", e.target.value)}
-            className="w-full rounded-lg border px-3 py-2"
-            placeholder="123 rue Saint-Denis, Montréal"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Loyer mensuel ($)</label>
-          <input
-            type="number"
-            value={form.rent_monthly || ""}
-            onChange={(e) => set("rent_monthly", Number(e.target.value))}
-            className="w-full rounded-lg border px-3 py-2"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Surface (sqft)</label>
-          <input
-            type="number"
-            value={form.surface_sqft || ""}
-            onChange={(e) => set("surface_sqft", Number(e.target.value))}
-            className="w-full rounded-lg border px-3 py-2"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Chambres</label>
-          <select
-            value={form.num_bedrooms}
-            onChange={(e) => set("num_bedrooms", Number(e.target.value))}
-            className="w-full rounded-lg border px-3 py-2"
-          >
-            {[1, 2, 3, 4, 5].map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Salles de bain</label>
-          <select
-            value={form.num_bathrooms}
-            onChange={(e) => set("num_bathrooms", Number(e.target.value))}
-            className="w-full rounded-lg border px-3 py-2"
-          >
-            {[1, 2, 3].map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Équipements */}
-      <div>
-        <h3 className="text-sm font-medium mb-2">Équipements actuels</h3>
-        <div className="flex flex-wrap gap-3">
-          {([
-            { key: "has_balcony" as const, label: "Balcon" },
-            { key: "has_dishwasher" as const, label: "Lave-vaisselle" },
-            { key: "has_laundry_inunit" as const, label: "Laveuse/sécheuse" },
-            { key: "has_parking" as const, label: "Stationnement" },
-            { key: "pet_friendly" as const, label: "Animaux acceptés" },
-          ]).map(({ key, label }) => (
-            <label
-              key={key}
-              className={`cursor-pointer rounded-full px-4 py-2 text-sm border transition-colors ${
-                form[key]
-                  ? "bg-blue-100 border-blue-400 text-blue-800"
-                  : "bg-gray-50 border-gray-200 text-gray-600"
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={form[key]}
-                onChange={(e) => set(key, e.target.checked)}
-                className="sr-only"
-              />
-              {label}
+    <form onSubmit={handleSubmit} className="space-y-12">
+      <section>
+        <h2 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-6 flex items-center gap-2">
+          <span className="w-8 h-px bg-blue-600/20" />
+          Votre nid actuel (Requis)
+        </h2>
+        
+        <div className="space-y-6">
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-2 flex justify-between">
+              <span>Adresse Résidentielle</span>
+              <span className="text-blue-500 font-bold text-[8px] border border-blue-200 px-1 rounded">REQUIS</span>
             </label>
-          ))}
+            <input
+              ref={addrRef}
+              type="text"
+              value={form.address}
+              onChange={(e) => set("address", e.target.value)}
+              className="w-full rounded-2xl border border-[var(--card-border)] bg-[var(--card)] px-5 py-4 text-sm shadow-sm focus:ring-2 ring-blue-100"
+              placeholder="Ex: 123 rue Saint-Denis, Montréal"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-2 flex justify-between">
+                <span>Loyer ($/mois)</span>
+                <span className="text-blue-500 font-bold text-[8px] border border-blue-200 px-1 rounded">REQUIS</span>
+              </label>
+              <input
+                type="number"
+                value={form.rent_monthly || ""}
+                onChange={(e) => set("rent_monthly", Number(e.target.value))}
+                className="w-full rounded-2xl border border-[var(--card-border)] bg-[var(--card)] px-5 py-4 text-sm"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-2 flex justify-between">
+                <span>Surface (sqft)</span>
+                <span className="text-blue-500 font-bold text-[8px] border border-blue-200 px-1 rounded">REQUIS</span>
+              </label>
+              <input
+                type="number"
+                value={form.surface_sqft || ""}
+                onChange={(e) => set("surface_sqft", Number(e.target.value))}
+                className="w-full rounded-2xl border border-[var(--card-border)] bg-[var(--card)] px-5 py-4 text-sm"
+                placeholder="Ex: 650"
+                required
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Adresse travail */}
-      <div>
-        <label className="block text-sm font-medium mb-1">Adresse de travail (pour le trajet)</label>
-        <input
-          type="text"
-          value={form.commute_work_address}
-          onChange={(e) => set("commute_work_address", e.target.value)}
-          className="w-full rounded-lg border px-3 py-2"
-          placeholder="500 Place d'Armes, Montréal"
-        />
-      </div>
+      <section className={form.amenities_current.length > 0 || form.amenities_desired.length > 0 ? "opacity-100" : "opacity-80 transition-opacity"}>
+        <h2 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-6 flex items-center gap-2">
+          <span className="w-8 h-px bg-blue-600/20" />
+          Les équipements (Optionnel)
+        </h2>
+        <div className="space-y-8">
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-3">Équipements que j&apos;ai déjà</label>
+            <TagInput 
+              tags={form.amenities_current} 
+              onChange={(tags) => set("amenities_current", tags)}
+              suggestions={["Lave-vaisselle", "Laveuse/Sécheuse", "Balcon", "Stationnement", "Climatisation"]}
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-amber-600 mb-3 underline">Ce qu&apos;il me manque (Rêve)</label>
+            <TagInput 
+              tags={form.amenities_desired} 
+              onChange={(tags) => set("amenities_desired", tags)}
+              placeholder="Ex: Cour arrière, Piscine, Casier..."
+            />
+          </div>
+        </div>
+      </section>
 
-      {/* Priorités */}
-      <div>
-        <h3 className="text-sm font-medium mb-3">Tes priorités (importance de 1 à 10)</h3>
-        <div className="space-y-3">
+      <section className={form.commute_work_address || form.commute_uni_address ? "opacity-100" : "opacity-80 transition-opacity"}>
+        <h2 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-6 flex items-center gap-2">
+          <span className="w-8 h-px bg-blue-600/20" />
+          Tes destinations (Optionnel)
+        </h2>
+        <div className="space-y-4">
+          <div className="relative">
+            <span className={`absolute left-4 top-1/2 -translate-y-1/2 text-lg transition-opacity ${form.commute_work_address ? "opacity-100" : "opacity-20"}`}>💼</span>
+            <input
+              ref={workRef}
+              type="text"
+              value={form.commute_work_address}
+              onChange={(e) => set("commute_work_address", e.target.value)}
+              className={`w-full rounded-2xl border bg-[var(--card)] pl-12 pr-5 py-4 text-sm transition-all ${form.commute_work_address ? "border-blue-400 ring-2 ring-blue-50" : "border-[var(--card-border)]"}`}
+              placeholder="Adresse de Travail"
+            />
+          </div>
+          <div className="relative">
+            <span className={`absolute left-4 top-1/2 -translate-y-1/2 text-lg transition-opacity ${form.commute_uni_address ? "opacity-100" : "opacity-20"}`}>🎓</span>
+            <input
+              ref={uniRef}
+              type="text"
+              value={form.commute_uni_address}
+              onChange={(e) => set("commute_uni_address", e.target.value)}
+              className={`w-full rounded-2xl border bg-[var(--card)] pl-12 pr-5 py-4 text-sm transition-all ${form.commute_uni_address ? "border-blue-400 ring-2 ring-blue-50" : "border-[var(--card-border)]"}`}
+              placeholder="Université / Campus"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-6 flex items-center gap-2">
+          <span className="w-8 h-px bg-blue-600/20" />
+          Tes priorités
+        </h2>
+        <div className="space-y-6 bg-[var(--surface)] p-6 rounded-3xl border border-[var(--card-border)]">
           {[
-            { key: "price", label: "Prix" },
-            { key: "space", label: "Espace" },
-            { key: "commute", label: "Trajet" },
-            { key: "amenities", label: "Équipements" },
-            { key: "quality", label: "Qualité" },
-          ].map(({ key, label }) => (
-            <div key={key} className="flex items-center gap-3">
-              <span className="w-28 text-sm">{label}</span>
+            { key: "price", label: "Prix bas", icon: "💰" },
+            { key: "space", label: "Grand espace", icon: "📐" },
+            { key: "commute", label: "Proximité métro", icon: "⚡" },
+            { key: "amenities", label: "Équipements", icon: "✨" },
+          ].map(({ key, label, icon }) => (
+            <div key={key} className="space-y-2">
+              <div className="flex justify-between text-xs font-bold uppercase tracking-tighter">
+                <span>{icon} {label}</span>
+                <span className="text-blue-600">{form.priorities[key as keyof typeof form.priorities]}/10</span>
+              </div>
               <input
                 type="range"
                 min={1}
                 max={10}
                 value={form.priorities[key as keyof typeof form.priorities]}
                 onChange={(e) => setPriority(key, Number(e.target.value))}
-                className="flex-1"
+                className="w-full accent-blue-600 cursor-pointer"
               />
-              <span className="w-8 text-center text-sm font-medium">
-                {form.priorities[key as keyof typeof form.priorities]}
-              </span>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
       <button
         type="submit"
-        className="w-full rounded-lg bg-blue-600 py-3 text-white font-medium hover:bg-blue-700 transition-colors"
+        className="w-full rounded-2xl bg-blue-600 py-5 text-white font-black uppercase tracking-widest hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-blue-100"
       >
         {submitText}
       </button>

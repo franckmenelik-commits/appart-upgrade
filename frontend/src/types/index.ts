@@ -29,7 +29,10 @@ export interface Baseline {
   has_parking: boolean;
   pet_friendly: boolean;
   commute_work_address: string | null;
+  commute_uni_address: string | null;
   commute_minutes: number | null;
+  amenities_current: string[] | null;
+  amenities_desired: string[] | null;
   priorities: Priorities | null;
   created_at: string;
   updated_at: string;

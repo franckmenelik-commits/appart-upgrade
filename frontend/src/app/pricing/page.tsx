@@ -12,7 +12,7 @@ const PLANS = [
     description: "Pour tester le concept",
     features: [
       "5 scores par mois",
-      "Entree manuelle d'annonces",
+      "Entrée manuelle d'annonces",
       "Score d'upgrade de base",
     ],
     cta: "Commencer gratuitement",
@@ -25,7 +25,7 @@ const PLANS = [
     period: "",
     description: "Paiement unique · Accès à vie",
     features: [
-      "Scores illimites",
+      "Scores illimités",
       "Scraping Centris automatique",
       "Extension Chrome Marketplace",
       "Notifications email (score 70+)",
@@ -39,16 +39,16 @@ const PLANS = [
     name: "Premium",
     price: "19.99",
     period: "/mois",
-    description: "L'avantage decisif",
+    description: "L'avantage décisif",
     features: [
       "Tout Pro inclus",
       "Analyse d'images par IA",
       "Calcul de trajet Google Maps",
-      "Alertes push temps reel",
-      "Acces API",
+      "Alertes push temps réel",
+      "Accès API",
       "Support prioritaire",
     ],
-    cta: "Passer a Premium",
+    cta: "Passer à Premium",
     highlighted: false,
   },
 ];
@@ -84,9 +84,9 @@ export default function PricingPage() {
 
       <div className="max-w-5xl mx-auto px-6 py-16">
         <div className="text-center mb-14">
-          <h1 className="text-3xl md:text-4xl font-bold">Un plan simple pour chaque etape</h1>
+          <h1 className="text-3xl md:text-4xl font-bold">Un plan simple pour chaque étape</h1>
           <p className="text-[var(--muted)] mt-3 text-lg">
-            Commence gratuitement, upgrade quand t&apos;es pret.
+            Commence gratuitement, upgrade quand t&apos;es prêt.
           </p>
         </div>
 
