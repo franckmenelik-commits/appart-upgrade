@@ -57,25 +57,24 @@ export default function BaselineForm({
   const uniRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const setupAutocomplete = async (ref: React.RefObject<HTMLInputElement>, field: keyof BaselineFormData) => {
+    const setupAutocomplete = async (id: string, field: keyof BaselineFormData) => {
       const g = (window as any).google;
-      if (!g || !ref.current) return;
+      if (!g) return;
 
       try {
-        // Try to load the new Places library
-        const { PlaceAutocompleteElement } = await g.maps.importLibrary("places");
-        
-        // If the new element isn't available or we want to stay with the classic JS approach
-        // but using the NEW API, we ensure the library is loaded.
-        
-        const autocomplete = new g.maps.places.Autocomplete(ref.current, {
+        await g.maps.importLibrary("places");
+        const inputElement = document.getElementById(id) as HTMLInputElement;
+        if (!inputElement) return;
+
+        // Use the modern PlaceAutocompleteElement (wrapped for standard inputs)
+        const autocomplete = new g.maps.places.Autocomplete(inputElement, {
           componentRestrictions: { country: "ca" },
           fields: ["formatted_address", "geometry"],
         });
 
         autocomplete.addListener("place_changed", () => {
           const place = autocomplete.getPlace();
-          if (place.formatted_address) {
+          if (place && place.formatted_address) {
             setForm(prev => ({ ...prev, [field]: place.formatted_address }));
           }
         });
@@ -85,10 +84,10 @@ export default function BaselineForm({
     };
 
     const timer = setTimeout(() => {
-      setupAutocomplete(addrRef, "address");
-      setupAutocomplete(workRef, "commute_work_address");
-      setupAutocomplete(uniRef, "commute_uni_address");
-    }, 1500);
+      setupAutocomplete("main-addr", "address");
+      setupAutocomplete("work-addr", "commute_work_address");
+      setupAutocomplete("uni-addr", "commute_uni_address");
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -121,7 +120,7 @@ export default function BaselineForm({
               <span className="text-blue-500 font-bold text-[8px] border border-blue-200 px-1 rounded">REQUIS</span>
             </label>
             <input
-              ref={addrRef}
+              id="main-addr"
               type="text"
               value={form.address}
               onChange={(e) => set("address", e.target.value)}
@@ -195,13 +194,13 @@ export default function BaselineForm({
         </h2>
         <div className="space-y-4">
           <div className="relative group">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 transition-opacity opacity-40 group-focus-within:opacity-100">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 transition-opacity opacity-40 group-focus-within:opacity-100 z-10 pointer-events-none">
               <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
             <input
-              ref={workRef}
+              id="work-addr"
               type="text"
               value={form.commute_work_address}
               onChange={(e) => set("commute_work_address", e.target.value)}
@@ -210,13 +209,13 @@ export default function BaselineForm({
             />
           </div>
           <div className="relative group">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 transition-opacity opacity-40 group-focus-within:opacity-100">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 transition-opacity opacity-40 group-focus-within:opacity-100 z-10 pointer-events-none">
               <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
               </svg>
             </div>
             <input
-              ref={uniRef}
+              id="uni-addr"
               type="text"
               value={form.commute_uni_address}
               onChange={(e) => set("commute_uni_address", e.target.value)}
