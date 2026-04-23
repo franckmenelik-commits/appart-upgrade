@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VIVENZA - VERSION TEST 18H30",
+  title: "Vivenza — Trouve ton signal dans le bruit du marché",
   description: "Moteur de recommandation d'appartements à Montréal. Évaluez vos upgrades en un score de 0 à 100.",
 };
 
