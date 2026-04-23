@@ -33,6 +33,8 @@ export const api = {
     request(`/baselines/${userId}`, { method: "PUT", body: JSON.stringify(data) }),
 
   // Listings
+  createListing: (data: Record<string, unknown>) =>
+    request("/listings/", { method: "POST", body: JSON.stringify(data) }),
   getListings: (params?: Record<string, string>) => {
     const query = params ? "?" + new URLSearchParams(params).toString() : "";
     return request(`/listings/${query}`);

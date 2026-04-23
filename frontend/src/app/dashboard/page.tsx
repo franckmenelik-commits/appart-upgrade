@@ -88,6 +88,9 @@ export default function DashboardPage() {
           </Link>
           {user && (
             <div className="flex items-center gap-4 text-sm">
+              <Link href="/settings" className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
+                Paramètres
+              </Link>
               <span className="text-[var(--muted)]">
                 Plan: <span className="text-[var(--foreground)] font-medium capitalize">{user.plan}</span>
               </span>
@@ -120,7 +123,13 @@ export default function DashboardPage() {
               )}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link 
+              href="/manual" 
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              + Ajouter
+            </Link>
             <select
               value={source}
               onChange={(e) => setSource(e.target.value)}

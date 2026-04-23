@@ -26,23 +26,27 @@ export interface BaselineFormData {
 
 export default function BaselineForm({
   onSubmit,
+  initialData,
+  submitText = "Enregistrer mon baseline",
 }: {
   onSubmit: (data: BaselineFormData) => void;
+  initialData?: Partial<BaselineFormData>;
+  submitText?: string;
 }) {
   const [form, setForm] = useState<BaselineFormData>({
-    address: "",
-    rent_monthly: 0,
-    surface_sqft: 0,
-    num_bedrooms: 1,
-    num_bathrooms: 1,
-    floor: null,
-    has_balcony: false,
-    has_dishwasher: false,
-    has_laundry_inunit: false,
-    has_parking: false,
-    pet_friendly: false,
-    commute_work_address: "",
-    priorities: { price: 5, space: 5, commute: 5, amenities: 5, quality: 5 },
+    address: initialData?.address || "",
+    rent_monthly: initialData?.rent_monthly || 0,
+    surface_sqft: initialData?.surface_sqft || 0,
+    num_bedrooms: initialData?.num_bedrooms || 1,
+    num_bathrooms: initialData?.num_bathrooms || 1,
+    floor: initialData?.floor ?? null,
+    has_balcony: initialData?.has_balcony || false,
+    has_dishwasher: initialData?.has_dishwasher || false,
+    has_laundry_inunit: initialData?.has_laundry_inunit || false,
+    has_parking: initialData?.has_parking || false,
+    pet_friendly: initialData?.pet_friendly || false,
+    commute_work_address: initialData?.commute_work_address || "",
+    priorities: initialData?.priorities || { price: 5, space: 5, commute: 5, amenities: 5, quality: 5 },
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -198,7 +202,7 @@ export default function BaselineForm({
         type="submit"
         className="w-full rounded-lg bg-blue-600 py-3 text-white font-medium hover:bg-blue-700 transition-colors"
       >
-        Enregistrer mon baseline
+        {submitText}
       </button>
     </form>
   );

@@ -1,0 +1,109 @@
+# Production compose — Vivenza on Coolify
+# Coolify's Traefik handles reverse proxy + SSL (Let's Encrypt)
+# Set these env vars in Coolify UI:
+#
+#   SERVICE_FQDN_FRONTEND   → your frontend domain  (e.g. vivenza.app)
+#   SERVICE_FQDN_BACKEND    → your API domain        (e.g. api.vivenza.app)
+#   POSTGRES_PASSWORD       → strong random password
+#   JWT_SECRET              → openssl rand -hex 32
+#   STRIPE_SECRET_KEY       → sk_live_...
+#   STRIPE_WEBHOOK_SECRET   → whsec_...
+#   ANTHROPIC_API_KEY       → sk-ant-...
+#   GEMINI_API_KEY          → (optional)
+#   RESEND_API_KEY          → re_...
+#   FRONTEND_URL            → https://vivenza.app
+#   BACKEND_URL             → https://api.vivenza.app
+#   AI_PROVIDER             → gemini (or anthropic)
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: appart_upgrade
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/appart_upgrade
+      - REDIS_URL=redis://redis:6379/0
+      - AI_PROVIDER=${AI_PROVIDER:-gemini}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - APP_ENV=production
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    restart: always
+    command: celery -A app.worker worker --beat --loglevel=info --concurrency=2
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/appart_upgrade
+      - REDIS_URL=redis://redis:6379/0
+      - AI_PROVIDER=${AI_PROVIDER:-gemini}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - APP_ENV=production
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: ${BACKEND_URL}/api/v1
+    restart: always
+    environment:
+      - NEXT_PUBLIC_API_URL=${BACKEND_URL}/api/v1
+
+volumes:
+  pgdata:
+  redisdata:
