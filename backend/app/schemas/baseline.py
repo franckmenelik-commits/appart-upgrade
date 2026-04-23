@@ -28,6 +28,10 @@ class BaselineCreate(BaseModel):
     has_parking: bool = False
     pet_friendly: bool = False
     commute_work_address: str | None = None
+    commute_uni_address: str | None = None
+    prefer_equidistance: bool = False
+    amenities_current: list[str] | None = []
+    amenities_desired: list[str] | None = []
     notes: str | None = None
     priorities: Priorities = Priorities()
 
@@ -45,6 +49,10 @@ class BaselineUpdate(BaseModel):
     has_parking: bool | None = None
     pet_friendly: bool | None = None
     commute_work_address: str | None = None
+    commute_uni_address: str | None = None
+    prefer_equidistance: bool | None = None
+    amenities_current: list[str] | None = None
+    amenities_desired: list[str] | None = None
     notes: str | None = None
     priorities: Priorities | None = None
 
@@ -65,7 +73,11 @@ class BaselineResponse(BaseModel):
     has_parking: bool
     pet_friendly: bool
     commute_work_address: str | None
+    commute_uni_address: str | None
     commute_minutes: int | None
+    prefer_equidistance: bool
+    amenities_current: list[str] | None
+    amenities_desired: list[str] | None
     priorities: dict | None
     created_at: datetime
     updated_at: datetime
