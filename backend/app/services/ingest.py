@@ -293,33 +293,40 @@ async def ingest_kijiji_listings(
     return new_listings
 
 
-async def run_full_pipeline(db: Session) -> dict:
+async def run_full_pipeline() -> dict:
     """Pipeline complet : scrape Centris + Kijiji → score → alertes email."""
-    # Scrape les deux sources en parallèle
-    centris_task = ingest_centris_listings(db)
-    kijiji_task = ingest_kijiji_listings(db)
-    centris_listings, kijiji_listings = await asyncio.gather(centris_task, kijiji_task)
-    new_listings = centris_listings + kijiji_listings
+    from app.database import SessionLocal
+    
+    # On crée une nouvelle session dédiée pour le background task
+    db = SessionLocal()
+    try:
+        # Scrape les deux sources en parallèle
+        centris_task = ingest_centris_listings(db)
+        kijiji_task = ingest_kijiji_listings(db)
+        centris_listings, kijiji_listings = await asyncio.gather(centris_task, kijiji_task)
+        new_listings = centris_listings + kijiji_listings
 
-    baselines = list(db.scalars(select(Baseline)))
-    total_scores = 0
+        baselines = list(db.scalars(select(Baseline)))
+        total_scores = 0
 
-    # Score pour chaque user en parallèle si plusieurs users
-    if len(baselines) == 1:
-        scores = await score_listings_for_user(db, str(baselines[0].user_id), new_listings)
-        total_scores = len(scores)
-    else:
-        # Multi-user : on score aussi les anciennes annonces non encore scorées
-        all_listings = list(db.scalars(select(Listing).where(Listing.is_active)).all())
-        tasks = [score_listings_for_user(db, str(b.user_id), all_listings) for b in baselines]
-        all_scores = await asyncio.gather(*tasks)
-        total_scores = sum(len(s) for s in all_scores)
+        # Score pour chaque user en parallèle si plusieurs users
+        if len(baselines) == 1:
+            scores = await score_listings_for_user(db, str(baselines[0].user_id), new_listings)
+            total_scores = len(scores)
+        else:
+            # Multi-user : on score aussi les anciennes annonces non encore scorées
+            all_listings = list(db.scalars(select(Listing).where(Listing.is_active)).all())
+            tasks = [score_listings_for_user(db, str(b.user_id), all_listings) for b in baselines]
+            all_scores = await asyncio.gather(*tasks)
+            total_scores = sum(len(s) for s in all_scores)
 
-    return {
-        "new_listings": len(new_listings),
-        "users_scored": len(baselines),
-        "new_scores": total_scores,
-    }
+        return {
+            "new_listings": len(new_listings),
+            "users_scored": len(baselines),
+            "new_scores": total_scores,
+        }
+    finally:
+        db.close()
 
 
 def _build_description(raw: CentrisListing) -> str:

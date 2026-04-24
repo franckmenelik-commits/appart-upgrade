@@ -33,8 +33,8 @@ async def create_baseline(
     db.commit()
     db.refresh(baseline)
     
-    # Lancer le scraping et scoring en arrière-plan
-    background_tasks.add_task(run_full_pipeline, db)
+    # On répond d'abord, on travaille après
+    background_tasks.add_task(run_full_pipeline)
     
     return baseline
 
@@ -69,6 +69,6 @@ async def update_baseline(
     db.refresh(user.baseline)
     
     # Relancer le pipeline pour mettre à jour les scores avec les nouvelles priorités
-    background_tasks.add_task(run_full_pipeline, db)
+    background_tasks.add_task(run_full_pipeline)
     
     return user.baseline
