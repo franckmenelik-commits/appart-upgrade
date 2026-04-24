@@ -1,18 +1,23 @@
 import uuid
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.baseline import Baseline
 from app.models.user import User
 from app.schemas.baseline import BaselineCreate, BaselineResponse, BaselineUpdate
+from app.services.ingest import run_full_pipeline
 
 router = APIRouter()
 
 
 @router.post("/{user_id}", response_model=BaselineResponse, status_code=201)
-def create_baseline(user_id: uuid.UUID, data: BaselineCreate, db: Session = Depends(get_db)):
+async def create_baseline(
+    user_id: uuid.UUID, 
+    data: BaselineCreate, 
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
@@ -27,6 +32,10 @@ def create_baseline(user_id: uuid.UUID, data: BaselineCreate, db: Session = Depe
     db.add(baseline)
     db.commit()
     db.refresh(baseline)
+    
+    # Lancer le scraping et scoring en arrière-plan
+    background_tasks.add_task(run_full_pipeline, db)
+    
     return baseline
 
 
@@ -39,7 +48,12 @@ def get_baseline(user_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.put("/{user_id}", response_model=BaselineResponse)
-def update_baseline(user_id: uuid.UUID, data: BaselineUpdate, db: Session = Depends(get_db)):
+async def update_baseline(
+    user_id: uuid.UUID, 
+    data: BaselineUpdate, 
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     user = db.get(User, user_id)
     if not user or not user.baseline:
         raise HTTPException(status_code=404, detail="Baseline non trouvé")
@@ -53,4 +67,8 @@ def update_baseline(user_id: uuid.UUID, data: BaselineUpdate, db: Session = Depe
 
     db.commit()
     db.refresh(user.baseline)
+    
+    # Relancer le pipeline pour mettre à jour les scores avec les nouvelles priorités
+    background_tasks.add_task(run_full_pipeline, db)
+    
     return user.baseline

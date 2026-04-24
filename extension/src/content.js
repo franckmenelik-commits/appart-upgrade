@@ -6,7 +6,7 @@
  * On injecte un bouton "Score it" sur chaque carte détectée.
  */
 
-const API_URL = "http://localhost:8000/api/v1";
+const API_URL = "https://api.vivenza.ca/api/v1";
 const PROCESSED_ATTR = "data-appart-upgrade";
 
 // Sélecteurs Facebook Marketplace (peuvent changer — on utilise des heuristiques)

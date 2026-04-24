@@ -12,7 +12,7 @@ async function init() {
     "totalCaptured",
   ]);
   $("userId").value = storage.userId || "";
-  $("apiUrl").value = storage.apiUrl || "http://localhost:8000/api/v1";
+  $("apiUrl").value = storage.apiUrl || "https://api.vivenza.ca/api/v1";
   $("totalCount").textContent = storage.totalCaptured || 0;
 
   // Vérifier si on est sur Marketplace
