@@ -25,6 +25,8 @@ from app.services.email_alerts import send_score_alert
 from app.services.push_alerts import send_premium_alert
 from app.services.extractor import extract_listing_data
 from app.services.kijiji import scrape_kijiji
+from app.services.zumper import scrape_zumper
+from app.services.rentals import scrape_rentals
 from app.services.scoring import compute_upgrade_score
 
 logger = logging.getLogger(__name__)
@@ -293,6 +295,42 @@ async def ingest_kijiji_listings(
     return new_listings
 
 
+async def ingest_zumper_listings(db: Session, min_price: int = 800, max_price: int = 4000) -> list[Listing]:
+    raw_listings = await scrape_zumper(min_price=min_price, max_price=max_price)
+    existing_ids = set(db.scalars(select(Listing.source_id)).all())
+    new_raws = [r for r in raw_listings if r.source_id not in existing_ids]
+    if not new_raws: return []
+    new_listings = []
+    for raw in new_raws:
+        listing = Listing(
+            source="zumper", source_id=raw.source_id, source_url=raw.source_url,
+            title=raw.title, description_raw=raw.description_raw, rent_monthly=raw.price_value,
+            image_urls=[raw.image_url] if raw.image_url else None
+        )
+        db.add(listing)
+        new_listings.append(listing)
+    db.commit()
+    return new_listings
+
+
+async def ingest_rentals_listings(db: Session, min_price: int = 800, max_price: int = 4000) -> list[Listing]:
+    raw_listings = await scrape_rentals(min_price=min_price, max_price=max_price)
+    existing_ids = set(db.scalars(select(Listing.source_id)).all())
+    new_raws = [r for r in raw_listings if r.source_id not in existing_ids]
+    if not new_raws: return []
+    new_listings = []
+    for raw in new_raws:
+        listing = Listing(
+            source="rentals", source_id=raw.source_id, source_url=raw.source_url,
+            title=raw.title, description_raw=raw.description_raw, rent_monthly=raw.price_value,
+            image_urls=[raw.image_url] if raw.image_url else None
+        )
+        db.add(listing)
+        new_listings.append(listing)
+    db.commit()
+    return new_listings
+
+
 async def run_full_pipeline() -> dict:
     """Pipeline complet : scrape Centris + Kijiji → score → alertes email."""
     from app.database import SessionLocal
@@ -300,11 +338,14 @@ async def run_full_pipeline() -> dict:
     # On crée une nouvelle session dédiée pour le background task
     db = SessionLocal()
     try:
-        # Scrape les deux sources en parallèle
+        # Scrape les sources en parallèle
         centris_task = ingest_centris_listings(db)
         kijiji_task = ingest_kijiji_listings(db)
-        centris_listings, kijiji_listings = await asyncio.gather(centris_task, kijiji_task)
-        new_listings = centris_listings + kijiji_listings
+        zumper_task = ingest_zumper_listings(db)
+        rentals_task = ingest_rentals_listings(db)
+        
+        results = await asyncio.gather(centris_task, kijiji_task, zumper_task, rentals_task)
+        new_listings = [l for sublist in results for l in sublist]
 
         baselines = list(db.scalars(select(Baseline)))
         total_scores = 0

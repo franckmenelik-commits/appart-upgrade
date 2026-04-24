@@ -29,7 +29,7 @@ async def trigger_centris_scrape(
 
 
 @router.post("/pipeline")
-async def trigger_full_pipeline(db: Session = Depends(get_db)):
+async def trigger_full_pipeline():
     """Déclenche le pipeline complet : scrape + scoring pour tous les utilisateurs."""
-    result = await run_full_pipeline(db)
+    result = await run_full_pipeline()
     return {"status": "ok", **result}
