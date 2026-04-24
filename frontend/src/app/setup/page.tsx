@@ -55,8 +55,16 @@ export default function SetupPage() {
 
       await api.createBaseline(userId, data as unknown as Record<string, unknown>);
       router.push("/dashboard");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur de sauvegarde");
+    } catch (err: any) {
+      if (err.message.includes("404") || err.message.includes("not found")) {
+        // Stale session from old server! Clear and restart
+        localStorage.removeItem("vivenza_token");
+        localStorage.removeItem("vivenza_user_id");
+        setStep("auth");
+        setError("Ta session a expire (migration serveur). Re-inscris-toi en 10s.");
+      } else {
+        setError(err instanceof Error ? err.message : "Erreur de sauvegarde");
+      }
     } finally {
       setLoading(false);
     }

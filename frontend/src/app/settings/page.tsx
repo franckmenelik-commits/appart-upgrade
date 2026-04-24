@@ -58,8 +58,14 @@ export default function SettingsPage() {
       
       setSuccess("Baseline sauvegardé avec succès !");
       setTimeout(() => router.push("/dashboard"), 1500);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur de mise à jour");
+    } catch (err: any) {
+      if (err.message.includes("404") || err.message.includes("Not Found")) {
+        localStorage.removeItem("vivenza_token");
+        localStorage.removeItem("vivenza_user_id");
+        router.push("/setup");
+      } else {
+        setError(err instanceof Error ? err.message : "Erreur de mise à jour");
+      }
     }
   };
 
