@@ -14,6 +14,16 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
   });
   if (!res.ok) {
+    if (res.status === 404) {
+      // Nettoyage automatique des sessions zombies
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("vivenza_token");
+        localStorage.removeItem("vivenza_user_id");
+        if (window.location.pathname !== "/setup") {
+          window.location.href = "/setup";
+        }
+      }
+    }
     const error = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(error.detail || "Erreur API");
   }
