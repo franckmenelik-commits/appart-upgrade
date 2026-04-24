@@ -1,4 +1,12 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+// On force l'URL de production si on est sur vivenza.ca, sinon on utilise la variable d'env ou localhost
+const getBaseUrl = () => {
+  if (typeof window !== "undefined" && (window.location.hostname === "vivenza.ca" || window.location.hostname === "www.vivenza.ca")) {
+    return "https://api.vivenza.ca/api/v1";
+  }
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+};
+
+const API_BASE = getBaseUrl();
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
