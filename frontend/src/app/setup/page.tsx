@@ -19,9 +19,16 @@ export default function SetupPage() {
   const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("vivenza_token");
-    if (saved) {
-      setStep("baseline");
+    const token = localStorage.getItem("vivenza_token");
+    if (token) {
+      // Si on a un token, on récupère l'utilisateur pour être sûr d'avoir l'ID
+      api.me(token).then((user: any) => {
+        localStorage.setItem("vivenza_user_id", user.id);
+        setStep("baseline");
+      }).catch(() => {
+        localStorage.removeItem("vivenza_token");
+        localStorage.removeItem("vivenza_user_id");
+      });
     }
   }, []);
 
